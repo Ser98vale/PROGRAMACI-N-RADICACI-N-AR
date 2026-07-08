@@ -244,7 +244,7 @@
       <div class="table-scroll">
         <table class="dash">
           <thead><tr>
-            <th>Ciclo</th><th>Fecha solicitud</th><th>OSC</th><th>Marca</th><th>Producto</th><th>Ítems</th>
+            <th>Ciclo</th><th>Fecha solicitud</th><th>Fecha de radicación</th><th>OSC</th><th>Categoría</th><th>Marca</th><th>Producto</th><th>Ítems</th>
             <th>N° registros<br>proyectados</th><th>Tipo de trámite</th><th>Tarifa</th><th>Costo (COP)</th>
             <th>Unidad de venta</th><th>Ruta de pago</th>
             <th>1. Regulatorio</th><th>2. Gerencia supply</th><th>3. Contabilidad</th><th>4. Tesorería</th>
@@ -275,6 +275,12 @@
       <div class="card">
         <div class="card-head">Costo por unidad de venta</div>
         <div class="card-body"><ul class="month-list" id="unitList"><li class="notif-empty">Sin datos de costo aún.</li></ul></div>
+      </div>
+    </section>
+    <section>
+      <div class="card">
+        <div class="card-head">Costo total por categoría</div>
+        <div class="card-body"><ul class="month-list" id="categoryList"><li class="notif-empty">Sin datos de costo aún.</li></ul></div>
       </div>
     </section>
   </div>
@@ -327,7 +333,9 @@
       <div class="form-grid">
         <div class="form-field"><label>Ciclo</label><select id="f-ciclo"></select></div>
         <div class="form-field"><label>Fecha de solicitud</label><input type="date" id="f-fecha"></div>
+        <div class="form-field"><label>Fecha de radicación</label><input type="date" id="f-fechaRadicacion"></div>
         <div class="form-field"><label>OSC</label><input type="text" id="f-osc" placeholder="Se puede asignar después"></div>
+        <div class="form-field"><label>Categoría</label><select id="f-categoria"></select></div>
         <div class="form-field"><label>Marca</label><input type="text" id="f-marca"></div>
         <div class="form-field" style="grid-column:1/-1;"><label>Producto</label><input type="text" id="f-producto"></div>
         <div class="form-field"><label>Ítems</label><input type="text" id="f-items"></div>
@@ -369,6 +377,7 @@
     {v:'1029', l:'1029 (Renovación)'},{v:'130', l:'130 (Importador paralelo)'}
   ];
   const UNIDADES = ['Cromantic','Aruma'];
+  const CATEGORIAS = ['Maquillaje','Cuidado de la piel','Capilar'];
   const RUTAS = ['INVIMÁGIL','Oficina Virtual'];
   const CICLOS = ['Ciclo 1 · Martes','Ciclo 2 · Jueves'];
   const STEP_ORDER = ['regulatorio','gerencia','contabilidad','tesoreria'];
@@ -419,6 +428,20 @@
     return d.toLocaleDateString('es-CO', {weekday:'long', day:'numeric', month:'long'});
   }
   function sameDate(a,b){ return a.getFullYear()===b.getFullYear() && a.getMonth()===b.getMonth() && a.getDate()===b.getDate(); }
+  function cicloDow(ciclo){ return ciclo === CICLOS[0] ? 2 : 4; } // Martes=2, Jueves=4
+  function radicacionMatch(row){
+    if(!row.fechaRadicacion) return null; // sin definir aún
+    const d = new Date(row.fechaRadicacion+'T00:00:00');
+    return d.getDay() === cicloDow(row.ciclo);
+  }
+  function radicacionMatchLabel(row){
+    const m = radicacionMatch(row);
+    if(m===null) return '';
+    const dowName = cicloDow(row.ciclo)===2 ? 'martes' : 'jueves';
+    return m
+      ? `<div class="step-meta" style="color:var(--ok);">✓ Coincide con ${row.ciclo}</div>`
+      : `<div class="step-meta" style="color:var(--alert); font-weight:700;">⚠ No coincide con ${row.ciclo} (debe caer en ${dowName})</div>`;
+  }
 
   // ===== SYNC STATUS =====
   function setStatus(mode, sub){
@@ -590,7 +613,9 @@
       return `<tr data-id="${r.id}">
         <td><select data-field="ciclo">${opts(CICLOS, r.ciclo)}</select><div class="step-meta">Pago: ${paymentDateLabel(r)}</div></td>
         <td><input type="date" data-field="fecha" value="${r.fecha||''}"></td>
+        <td><input type="date" data-field="fechaRadicacion" value="${r.fechaRadicacion||''}">${radicacionMatchLabel(r)}</td>
         <td><input type="text" class="narrow" data-field="osc" value="${escapeHtml(r.osc)}" placeholder="N° OSC"></td>
+        <td><select data-field="categoria" style="min-width:130px;">${opts(CATEGORIAS, r.categoria)}</select></td>
         <td><input type="text" class="narrow" data-field="marca" value="${escapeHtml(r.marca)}"></td>
         <td><input type="text" data-field="producto" value="${escapeHtml(r.producto)}" style="min-width:150px;"></td>
         <td><input type="text" class="narrow" data-field="items" value="${escapeHtml(r.items)}"></td>
@@ -774,7 +799,7 @@
     const now = new Date(); const curKey = now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0');
     const costoMes = rows.filter(r=> (r.fecha||'').slice(0,7)===curKey).reduce((s,r)=> s+parseCosto(r.costo),0);
     document.getElementById('statCostoMes').textContent = money(costoMes);
-    renderMonthList(); renderUnitList();
+    renderMonthList(); renderUnitList(); renderCategoryList();
   }
 
   const MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
@@ -790,6 +815,13 @@
     const keys = Object.keys(byUnit); const list = document.getElementById('unitList');
     if(!keys.length){ list.innerHTML = '<li class="notif-empty">Sin datos de costo aún.</li>'; return; }
     list.innerHTML = keys.map(k => `<li><b>${escapeHtml(k)}</b><span class="amt">${money(byUnit[k])}</span></li>`).join('');
+  }
+  function renderCategoryList(){
+    const byCat = {};
+    rows.forEach(r=>{ const cat = r.categoria || 'Sin categoría'; byCat[cat]=(byCat[cat]||0)+parseCosto(r.costo); });
+    const keys = Object.keys(byCat); const list = document.getElementById('categoryList');
+    if(!keys.length){ list.innerHTML = '<li class="notif-empty">Sin datos de costo aún.</li>'; return; }
+    list.innerHTML = keys.map(k => `<li><b>${escapeHtml(k)}</b><span class="amt">${money(byCat[k])}</span></li>`).join('');
   }
 
   function renderMonthCalendar(){
@@ -835,6 +867,7 @@
     document.getElementById('f-tipo').innerHTML = opts(TIPOS, TIPOS[0]);
     document.getElementById('f-tarifa').innerHTML = opts(TARIFAS, TARIFAS[0].v);
     document.getElementById('f-unidad').innerHTML = opts(UNIDADES, UNIDADES[0]);
+    document.getElementById('f-categoria').innerHTML = opts(CATEGORIAS, CATEGORIAS[0]);
     document.getElementById('f-ruta').innerHTML = opts(RUTAS, RUTAS[0]);
   }
   function openModal(){ document.getElementById('modalOverlay').classList.add('open'); }
@@ -847,7 +880,8 @@
     const id = 'r' + Math.random().toString(36).slice(2,9);
     rows.push({
       id, ciclo:document.getElementById('f-ciclo').value, fecha:document.getElementById('f-fecha').value,
-      osc:document.getElementById('f-osc').value.trim(), marca:document.getElementById('f-marca').value,
+      fechaRadicacion:document.getElementById('f-fechaRadicacion').value,
+      osc:document.getElementById('f-osc').value.trim(), categoria:document.getElementById('f-categoria').value, marca:document.getElementById('f-marca').value,
       producto:document.getElementById('f-producto').value || 'Nuevo trámite', items:document.getElementById('f-items').value,
       registros:document.getElementById('f-registros').value, tipo:document.getElementById('f-tipo').value,
       tarifa:document.getElementById('f-tarifa').value, costo:document.getElementById('f-costo').value,
@@ -855,7 +889,7 @@
       steps: blankSteps()
     });
     renderAll(); saveData(); closeModal();
-    ['f-fecha','f-osc','f-marca','f-producto','f-items','f-registros','f-costo'].forEach(id=> document.getElementById(id).value='');
+    ['f-fecha','f-fechaRadicacion','f-osc','f-marca','f-producto','f-items','f-registros','f-costo'].forEach(id=> document.getElementById(id).value='');
   });
 
   // ===== TABS =====
