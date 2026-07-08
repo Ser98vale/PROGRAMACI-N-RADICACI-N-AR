@@ -1,0 +1,900 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Programación Ciclos de Radicación — Asuntos Regulatorios</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --m-950:#3a0827; --m-900:#55103a; --m-800:#731650; --m-700:#94206a;
+    --accent:#F5127A; --accent-light:#ff6fc0;
+    --pink-bg:#fdf1f8; --card:#ffffff; --ink:#2b1424; --ink-soft:#7a5468; --line:#f1d5e6;
+    --pend-bg:#fbe4f2; --pend:#a3125f;
+    --ok-bg:#f6dcef; --ok:#8c0f66;
+    --alert-bg:#fdd9e7; --alert:#c11552;
+    --warn-bg:#fde6cf; --warn:#b5651a;
+    --lock-bg:#f4e2ee; --lock:#a06a90;
+    --radius:10px;
+    --shadow:0 1px 2px rgba(120,10,80,.07), 0 8px 24px -12px rgba(120,10,80,.22);
+  }
+  *{box-sizing:border-box;}
+  body{ margin:0; background:var(--pink-bg); color:var(--ink); font-family:'Inter',sans-serif; -webkit-font-smoothing:antialiased;}
+  h1,h2,h3{ font-family:'Space Grotesk',sans-serif; letter-spacing:-0.01em;}
+  .mono{ font-family:'IBM Plex Mono',monospace;}
+
+  .hero{ background: radial-gradient(1200px 500px at 85% -10%, rgba(255,111,192,.25), transparent 60%),
+      linear-gradient(155deg, var(--accent), var(--m-900) 55%, var(--m-950));
+    color:#fff; padding:36px 28px 0; position:relative; overflow:hidden;
+  }
+  .hero::after{ content:""; position:absolute; inset:0;
+    background-image:repeating-linear-gradient(90deg, rgba(255,255,255,.05) 0 1px, transparent 1px 90px); pointer-events:none;}
+  .hero-top{ display:flex; justify-content:space-between; align-items:flex-start; gap:20px; flex-wrap:wrap; position:relative; z-index:1;}
+  .brand{ display:flex; align-items:center; gap:14px;}
+  .brand-mark{ width:46px;height:46px;border-radius:50%; border:2px solid var(--accent-light); display:flex;align-items:center;justify-content:center; flex-shrink:0;}
+  .brand-mark span{ width:16px;height:16px;border-radius:50%; background:var(--accent-light);}
+  .eyebrow{ text-transform:uppercase; letter-spacing:.16em; font-size:11px; color:var(--accent-light); font-weight:600;}
+  h1.title{ font-size:clamp(22px,3.4vw,32px); margin:6px 0 0; font-weight:700; line-height:1.1;}
+
+  .sync-badge{ background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.16); border-radius:12px; padding:12px 16px; min-width:210px;}
+  .sync-row{ display:flex; align-items:center; gap:8px; font-size:12px; color:#f6dcef; text-transform:uppercase; letter-spacing:.08em; font-weight:600;}
+  .pulse-dot{ width:9px;height:9px;border-radius:50%; background:#f5c542; transition:background .3s ease;}
+  .pulse-dot.synced{ background:#4ade80; animation:pulse 2s infinite;}
+  .pulse-dot.offline{ background:#f04b6a; animation:none;}
+  @keyframes pulse{ 0%{box-shadow:0 0 0 0 rgba(74,222,128,.55);} 70%{box-shadow:0 0 0 9px rgba(74,222,128,0);} 100%{box-shadow:0 0 0 0 rgba(74,222,128,0);} }
+  .sync-sub{ font-size:11px; color:#e3b8d2; margin-top:4px;}
+
+  .nav-tabs{ display:flex; gap:4px; margin-top:22px; position:relative; z-index:1; overflow-x:auto; }
+  .nav-tab{ background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.14); color:#f3d6e9; padding:10px 18px;
+    border-radius:10px 10px 0 0; font-weight:600; font-size:13px; cursor:pointer; white-space:nowrap; }
+  .nav-tab.active{ background:var(--pink-bg); color:var(--m-950); }
+
+  .wrap{ max-width:1360px; margin:0 auto; padding:26px 28px 70px;}
+  .tab-panel{ display:none; }
+  .tab-panel.active{ display:block; }
+  section{ margin-top:34px;}
+  section:first-child{ margin-top:0;}
+  .section-head{ display:flex; align-items:baseline; gap:10px; margin-bottom:16px;}
+  .section-head h2{ font-size:20px; margin:0; color:var(--m-950);}
+  .section-head .rule{ flex:1; height:1px; background:var(--line);}
+
+  .grid-2{ display:grid; grid-template-columns:1fr 1fr; gap:20px;}
+  @media(max-width:900px){ .grid-2{grid-template-columns:1fr;} }
+
+  .card{ background:var(--card); border:1px solid var(--line); border-radius:var(--radius); box-shadow:var(--shadow);}
+  .card-head{ background:var(--m-900); color:#fff; padding:12px 18px; border-radius:var(--radius) var(--radius) 0 0; font-weight:600; font-size:14px; display:flex; justify-content:space-between; align-items:center;}
+  .card-head .count-badge{ background:var(--accent); font-size:11px; padding:2px 9px; border-radius:20px;}
+  .card-body{ padding:18px;}
+
+  .dash-toolbar{ display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom:14px;}
+  .dash-live{ display:flex; align-items:center; gap:8px; font-size:12px; color:var(--ink-soft); font-weight:600;}
+  .btn{ border:none; cursor:pointer; font-family:'Inter',sans-serif; font-weight:600; font-size:13px; padding:9px 16px; border-radius:7px; transition:transform .08s ease, opacity .15s ease;}
+  .btn:active{ transform:scale(.97);}
+  .btn-primary{ background:var(--accent); color:#fff;}
+  .btn-primary:hover{ opacity:.9;}
+  .btn-ghost{ background:transparent; border:1px solid var(--line); color:var(--m-900);}
+  .btn-ghost:hover{ background:#f7e3f0;}
+  .btn-mini{ font-size:10.5px; padding:5px 8px; border-radius:6px; border:1px solid var(--line); background:#fff; cursor:pointer; color:var(--m-900); font-weight:600; width:100%;}
+  .btn-mini:hover{ background:#f7e3f0;}
+  .btn-mini.done{ background:var(--ok-bg); color:var(--ok); border-color:#e6b9d8;}
+  .btn-mini.locked{ background:var(--lock-bg); color:var(--lock); border-color:#e3cfe0; cursor:not-allowed;}
+  .btn-mini.alertbtn{ background:var(--alert-bg); color:var(--alert); border-color:#f0b9cf; width:auto;}
+  .btn-mini.linkbtn{ background:#eaf1fb; color:#2a4e8c; border-color:#cfdcf2;}
+
+  table.dash{ width:100%; border-collapse:collapse; font-size:12px;}
+  table.dash thead th{ text-align:left; font-size:9.5px; text-transform:uppercase; letter-spacing:.04em; color:#fff; background:var(--m-900); padding:8px 8px; white-space:nowrap;}
+  table.dash thead th:first-child{ border-radius:8px 0 0 0;}
+  table.dash thead th:last-child{ border-radius:0 8px 0 0;}
+  table.dash tbody td{ padding:7px 8px; border-bottom:1px solid var(--line); vertical-align:top;}
+  table.dash tbody tr:hover{ background:#fdf3f9;}
+  table.dash input[type=text], table.dash input[type=date], table.dash select{
+    width:100%; font-family:'Inter',sans-serif; font-size:11.5px; padding:5px 6px;
+    border:1px solid var(--line); border-radius:6px; background:#fff; color:var(--ink);
+  }
+  table.dash input.narrow{ width:70px;}
+  .pill{ display:inline-block; padding:3px 9px; border-radius:20px; font-size:10px; font-weight:700; white-space:nowrap;}
+  .pill.pend{ background:var(--pend-bg); color:var(--pend);}
+  .pill.ok{ background:var(--ok-bg); color:var(--ok);}
+  .pill.blocked{ background:var(--alert-bg); color:var(--alert);}
+  .pill.warn{ background:var(--warn-bg); color:var(--warn);}
+  .step-cell{ min-width:135px;}
+  .step-meta{ font-size:9.5px; color:var(--ink-soft); margin-top:3px; line-height:1.4;}
+  .icon-btn{ border:1px solid var(--line); background:#fff; border-radius:6px; width:26px; height:26px; cursor:pointer; font-size:12px; display:flex; align-items:center; justify-content:center;}
+  .icon-btn:hover{ background:#f7e3f0;}
+
+  .stat-strip{ display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:14px; margin-bottom:18px;}
+  @media(max-width:600px){ .stat-strip{ grid-template-columns:repeat(2,1fr);} }
+  .stat{ background:#fff; border:1px solid var(--line); border-radius:10px; padding:14px 16px;}
+  .stat .num{ font-family:'Space Grotesk',sans-serif; font-size:24px; font-weight:700; color:var(--m-950);}
+  .stat .lbl{ font-size:10.5px; color:var(--ink-soft); text-transform:uppercase; letter-spacing:.05em; font-weight:600; margin-top:2px;}
+  .stat.accent .num{ color:var(--accent);}
+  .stat.ok .num{ color:var(--ok);}
+  .stat.alert .num{ color:var(--alert);}
+
+  .month-list{ list-style:none; margin:0; padding:0;}
+  .month-list li{ display:flex; justify-content:space-between; align-items:center; padding:9px 0; border-top:1px solid var(--line); font-size:13px;}
+  .month-list li:first-child{ border-top:none;}
+  .month-list b{ color:var(--m-950);}
+  .month-list .amt{ font-family:'IBM Plex Mono',monospace; font-weight:600; color:var(--accent);}
+
+  .table-scroll{ overflow-x:auto; border:1px solid var(--line); border-radius:10px;}
+
+  .role-card{ display:flex; gap:14px; padding:14px 0; border-top:1px solid var(--line);}
+  .role-card:first-child{ border-top:none;}
+  .role-badge{ width:36px;height:36px;border-radius:8px; background:var(--m-950); color:var(--accent-light); display:flex;align-items:center;justify-content:center; font-weight:700; font-family:'Space Grotesk',sans-serif; flex-shrink:0;}
+  .role-name{ font-weight:700; font-size:14px; color:var(--m-950);}
+  .role-desc{ font-size:12.6px; color:var(--ink-soft); margin-top:2px; line-height:1.5;}
+
+  .email-row{ display:flex; align-items:center; gap:10px; padding:8px 0; border-top:1px solid var(--line);}
+  .email-row:first-child{ border-top:none;}
+  .email-row label{ width:170px; font-size:12.5px; font-weight:600; color:var(--m-900); flex-shrink:0;}
+  .email-row input{ flex:1; font-family:'Inter',sans-serif; font-size:12.5px; padding:7px 9px; border:1px solid var(--line); border-radius:6px;}
+
+  .notif-list, .alert-list{ list-style:none; margin:0; padding:0; max-height:280px; overflow-y:auto;}
+  .notif-list li, .alert-list li{ display:flex; gap:10px; padding:10px 0; border-top:1px solid var(--line); font-size:12.5px; align-items:flex-start;}
+  .notif-list li:first-child, .alert-list li:first-child{ border-top:none;}
+  .notif-dot{ width:8px;height:8px; border-radius:50%; background:var(--accent); margin-top:5px; flex-shrink:0;}
+  .alert-dot{ width:8px;height:8px; border-radius:50%; background:var(--alert); margin-top:5px; flex-shrink:0;}
+  .notif-time{ color:var(--ink-soft); font-size:11px; font-family:'IBM Plex Mono',monospace;}
+  .notif-empty{ color:var(--ink-soft); font-size:12.5px; padding:10px 0;}
+  .alert-row-btn{ margin-left:auto; flex-shrink:0;}
+
+  .modal-overlay{ display:none; position:fixed; inset:0; background:rgba(58,8,39,.55); z-index:50; align-items:center; justify-content:center; padding:20px;}
+  .modal-overlay.open{ display:flex;}
+  .modal-box{ background:#fff; border-radius:14px; max-width:640px; width:100%; max-height:88vh; overflow-y:auto; box-shadow:0 20px 60px rgba(0,0,0,.3);}
+  .modal-head{ background:var(--m-900); color:#fff; padding:16px 22px; border-radius:14px 14px 0 0; display:flex; justify-content:space-between; align-items:center;}
+  .modal-head h3{ margin:0; font-size:16px;}
+  .modal-close{ background:none; border:none; color:#fff; font-size:20px; cursor:pointer;}
+  .modal-body{ padding:20px 22px;}
+  .form-grid{ display:grid; grid-template-columns:1fr 1fr; gap:14px;}
+  @media(max-width:560px){ .form-grid{ grid-template-columns:1fr;} }
+  .form-field label{ display:block; font-size:11.5px; font-weight:700; color:var(--m-900); margin-bottom:4px; text-transform:uppercase; letter-spacing:.03em;}
+  .form-field input, .form-field select{ width:100%; padding:9px 10px; border:1px solid var(--line); border-radius:7px; font-family:'Inter',sans-serif; font-size:13px;}
+  .modal-actions{ display:flex; justify-content:flex-end; gap:10px; margin-top:18px;}
+
+  footer{ text-align:center; padding:30px 20px 50px; color:var(--ink-soft); font-size:12.5px; border-top:1px solid var(--line); margin-top:50px;}
+  .foot-note{ font-size:11px; color:var(--ink-soft); margin-top:8px;}
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="hero-top">
+    <div class="brand">
+      <div class="brand-mark"><span></span></div>
+      <div>
+        <div class="eyebrow">Dashboard de radicación</div>
+        <h1 class="title">Programación Ciclos de Radicación<br>Asuntos Regulatorios</h1>
+      </div>
+    </div>
+    <div class="sync-badge">
+      <div class="sync-row"><span class="pulse-dot" id="syncDot"></span> <span id="syncLabel">Conectando…</span></div>
+      <div class="sync-sub" id="syncSub">Iniciando conexión con Firebase…</div>
+    </div>
+  </div>
+  <div class="nav-tabs">
+    <button class="nav-tab active" data-tab="resumen">Resumen</button>
+    <button class="nav-tab" data-tab="tramites">Trámites</button>
+    <button class="nav-tab" data-tab="finanzas">Finanzas</button>
+    <button class="nav-tab" data-tab="config">Configuración</button>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <!-- RESUMEN -->
+  <div class="tab-panel active" id="tab-resumen">
+    <section>
+      <div class="stat-strip">
+        <div class="stat"><div class="num" id="statTotal">0</div><div class="lbl">Trámites</div></div>
+        <div class="stat accent"><div class="num" id="statPend">0</div><div class="lbl">En curso</div></div>
+        <div class="stat ok"><div class="num" id="statOk">0</div><div class="lbl">Completados</div></div>
+        <div class="stat alert"><div class="num" id="statBloq">0</div><div class="lbl">Bloqueados</div></div>
+        <div class="stat"><div class="num" id="statNotif">0</div><div class="lbl">Notificaciones</div></div>
+      </div>
+    </section>
+    <section>
+      <div class="section-head"><h2>Calendario del mes en curso</h2><div class="rule"></div></div>
+      <div class="card">
+        <div class="card-body">
+          <div class="table-scroll">
+            <table class="dash" id="calendarTable">
+              <thead><tr><th>Semana</th><th>Martes (Ciclo 1)</th><th>Jueves (Ciclo 2)</th></tr></thead>
+              <tbody id="calendarBody"></tbody>
+            </table>
+          </div>
+          <p class="foot-note">Por cada día se muestra: radicaciones programadas (total planeado para esa fecha) y radicaciones realizadas (con el pago ya ejecutado por Tesorería).</p>
+        </div>
+      </div>
+    </section>
+    <section class="grid-2">
+      <div class="card">
+        <div class="card-head">Alertas activas <span class="count-badge" id="alertCount">0</span></div>
+        <div class="card-body"><ul class="alert-list" id="alertList"><li class="notif-empty">Sin alertas activas.</li></ul></div>
+      </div>
+      <div class="card">
+        <div class="card-head">Historial de notificaciones</div>
+        <div class="card-body"><ul class="notif-list" id="notifList"><li class="notif-empty">Aún no se han generado notificaciones.</li></ul></div>
+      </div>
+    </section>
+    <section>
+      <div class="section-head"><h2>Roles y responsabilidades</h2><div class="rule"></div></div>
+      <div class="card"><div class="card-body"><div class="grid-2">
+        <div>
+          <div class="role-card"><div class="role-badge">R</div><div><div class="role-name">Asuntos regulatorios</div><div class="role-desc">Radica el trámite y asigna la OSC. Primer paso: sin él, nada más avanza.</div></div></div>
+          <div class="role-card"><div class="role-badge">G</div><div><div class="role-name">Gerencia supply</div><div class="role-desc">Aprueba la OSC radicada antes de pasar a Contabilidad.</div></div></div>
+        </div>
+        <div>
+          <div class="role-card"><div class="role-badge">C</div><div><div class="role-name">Contabilidad</div><div class="role-desc">Contabiliza la OSC ya aprobada.</div></div></div>
+          <div class="role-card"><div class="role-badge">T</div><div><div class="role-name">Tesorería</div><div class="role-desc">Ejecuta el pago según la ruta: INVIMÁGIL (directo) u Oficina Virtual (link 24h).</div></div></div>
+        </div>
+      </div></div></div>
+    </section>
+  </div>
+
+  <!-- TRAMITES -->
+  <div class="tab-panel" id="tab-tramites">
+    <section>
+      <div class="dash-toolbar">
+        <div class="dash-live"><span class="pulse-dot synced" style="animation:none;"></span> Sincronizado en tiempo real vía Firebase</div>
+        <button class="btn btn-primary" id="btnAdd">+ Nuevo trámite</button>
+      </div>
+      <p class="foot-note" style="margin-bottom:10px;">Flujo <b>secuencial</b>: Asuntos regulatorios (asigna OSC) → Gerencia supply (aprueba) → Contabilidad (contabiliza) → Tesorería (ejecuta el pago según la ruta). Si alguien no tramita, el resto queda bloqueado y se genera una alerta.</p>
+      <div class="table-scroll">
+        <table class="dash">
+          <thead><tr>
+            <th>Ciclo</th><th>Fecha solicitud</th><th>OSC</th><th>Marca</th><th>Producto</th><th>Ítems</th>
+            <th>N° registros<br>proyectados</th><th>Tipo de trámite</th><th>Tarifa</th><th>Costo (COP)</th>
+            <th>Unidad de venta</th><th>Ruta de pago</th>
+            <th>1. Regulatorio</th><th>2. Gerencia supply</th><th>3. Contabilidad</th><th>4. Tesorería</th>
+            <th>Estado</th><th></th>
+          </tr></thead>
+          <tbody id="dashBody"></tbody>
+        </table>
+      </div>
+      <p class="foot-note">* El link de Oficina Virtual tiene vigencia de 24 horas: se muestra la cuenta regresiva y se genera una alerta automática cuando está por vencer o ya venció.</p>
+      <datalist id="regOptions"><option value="NA"><option value="GP"></datalist>
+    </section>
+  </div>
+
+  <!-- FINANZAS -->
+  <div class="tab-panel" id="tab-finanzas">
+    <section>
+      <div class="stat-strip">
+        <div class="stat accent"><div class="num" id="statCostoTotal">$0</div><div class="lbl">Costo total programado</div></div>
+        <div class="stat ok"><div class="num" id="statCostoMes">$0</div><div class="lbl">Gasto este mes</div></div>
+      </div>
+    </section>
+    <section class="grid-2">
+      <div class="card">
+        <div class="card-head">Gasto proyectado por mes</div>
+        <div class="card-body"><ul class="month-list" id="monthList"><li class="notif-empty">Sin datos de costo aún.</li></ul>
+          <p class="foot-note">Suma el costo de cada trámite según su fecha de solicitud.</p></div>
+      </div>
+      <div class="card">
+        <div class="card-head">Costo por unidad de venta</div>
+        <div class="card-body"><ul class="month-list" id="unitList"><li class="notif-empty">Sin datos de costo aún.</li></ul></div>
+      </div>
+    </section>
+  </div>
+
+  <!-- CONFIG -->
+  <div class="tab-panel" id="tab-config">
+    <section class="grid-2">
+      <div class="card">
+        <div class="card-head">Correos de notificación por rol</div>
+        <div class="card-body">
+          <div class="email-row"><label>Asuntos regulatorios</label><input type="text" id="email-Asuntos regulatorios" placeholder="correo@empresa.com"></div>
+          <div class="email-row"><label>Gerencia supply</label><input type="text" id="email-Gerencia supply" placeholder="correo@empresa.com"></div>
+          <div class="email-row"><label>Contabilidad</label><input type="text" id="email-Contabilidad" placeholder="correo@empresa.com"></div>
+          <div class="email-row"><label>Tesorería</label><input type="text" id="email-Tesorería" placeholder="correo@empresa.com"></div>
+          <button class="btn btn-primary" id="btnSaveEmails" style="margin-top:12px;">Guardar correos</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-head">Envío automático de correo (opcional)</div>
+        <div class="card-body">
+          <p class="foot-note" style="margin-top:0;">Pega la URL de tu Google Apps Script (termina en /exec) para enviar los correos automáticamente. Si se deja vacío, se abrirá tu programa de correo (mailto).</p>
+          <div class="email-row"><label>URL Webhook correo</label><input type="text" id="webhookUrl" placeholder="https://script.google.com/macros/s/.../exec"></div>
+          <div class="email-row"><label>Enlace del dashboard</label><input type="text" id="dashboardUrl" placeholder="URL pública de este dashboard"></div>
+          <button class="btn btn-primary" id="btnSaveWebhook" style="margin-top:8px;">Guardar configuración</button>
+        </div>
+      </div>
+    </section>
+    <section>
+      <div class="card">
+        <div class="card-head">Estado de la conexión</div>
+        <div class="card-body">
+          <p class="foot-note" style="margin-top:0; font-size:12.5px;">
+            🟢 Verde: conectado y sincronizando en vivo con Firebase.<br>
+            🟡 Amarillo: conectando o esperando respuesta.<br>
+            🔴 Rojo: sin conexión — se está usando una copia local (localStorage) de respaldo en este navegador; los cambios no se compartirán con los demás hasta reconectar.
+          </p>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <footer>Programación de ciclos de radicación de notificaciones sanitarias — sincronizado en tiempo real vía Firebase, accesible sin cuenta para todo el equipo.</footer>
+</div>
+
+<!-- MODAL NUEVO TRÁMITE -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal-box">
+    <div class="modal-head"><h3>Nuevo trámite</h3><button class="modal-close" id="modalClose">✕</button></div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-field"><label>Ciclo</label><select id="f-ciclo"></select></div>
+        <div class="form-field"><label>Fecha de solicitud</label><input type="date" id="f-fecha"></div>
+        <div class="form-field"><label>OSC</label><input type="text" id="f-osc" placeholder="Se puede asignar después"></div>
+        <div class="form-field"><label>Marca</label><input type="text" id="f-marca"></div>
+        <div class="form-field" style="grid-column:1/-1;"><label>Producto</label><input type="text" id="f-producto"></div>
+        <div class="form-field"><label>Ítems</label><input type="text" id="f-items"></div>
+        <div class="form-field"><label>N° registros proyectados</label><input type="text" id="f-registros" list="regOptions" placeholder="Número, NA o GP"></div>
+        <div class="form-field"><label>Tipo de trámite</label><select id="f-tipo"></select></div>
+        <div class="form-field"><label>Tarifa</label><select id="f-tarifa"></select></div>
+        <div class="form-field"><label>Costo (COP)</label><input type="text" id="f-costo" placeholder="0"></div>
+        <div class="form-field"><label>Unidad de venta</label><select id="f-unidad"></select></div>
+        <div class="form-field"><label>Ruta de pago</label><select id="f-ruta"></select></div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-ghost" id="btnCancelModal">Cancelar</button>
+        <button class="btn btn-primary" id="btnSaveModal">Guardar trámite</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  // ============== FIREBASE CONFIG — REEMPLAZA ESTOS VALORES ==============
+  const firebaseConfig = {
+    apiKey: "AIzaSyCaMLB5GnYRjI618LPagowj1h-owWizEuU",
+    authDomain: "radicacion-ar-671ac.firebaseapp.com",
+    databaseURL: "https://radicacion-ar-671ac-default-rtdb.firebaseio.com",
+    projectId: "radicacion-ar-671ac",
+    storageBucket: "radicacion-ar-671ac.firebasestorage.app",
+    messagingSenderId: "600920157251",
+    appId: "1:600920157251:web:d8695b70a55dab626af8f6"
+  };
+  const DB_PATH = 'dashboard_radicacion'; // cambia esto si quieres reusar un proyecto con otro path
+  const LOCAL_BACKUP_KEY = 'radicacion_local_backup_v1';
+  // =========================================================================
+
+  const TIPOS = ['Nuevo registro','Modificación registros','Rta suspensión','Rta requerimiento','Renovación','Importador paralelo'];
+  const TARIFAS = [
+    {v:'1027', l:'1027 (Nuevo registro)'},{v:'4001-23', l:'4001-23 (Modificación TL)'},
+    {v:'4001-22', l:'4001-22 (Modificación T)'},{v:'4001-21', l:'4001-21 (Modificación L)'},
+    {v:'1029', l:'1029 (Renovación)'},{v:'130', l:'130 (Importador paralelo)'}
+  ];
+  const UNIDADES = ['Cromantic','Aruma'];
+  const RUTAS = ['INVIMÁGIL','Oficina Virtual'];
+  const CICLOS = ['Ciclo 1 · Martes','Ciclo 2 · Jueves'];
+  const STEP_ORDER = ['regulatorio','gerencia','contabilidad','tesoreria'];
+  const STEP_LABELS = {regulatorio:'Asuntos regulatorios', gerencia:'Gerencia supply', contabilidad:'Contabilidad', tesoreria:'Tesorería'};
+  const LINK_MS = 24*3600*1000, WARN_MS = 2*3600*1000;
+
+  function blankSteps(){
+    return { regulatorio:{done:false,by:'',at:''}, gerencia:{done:false,by:'',at:''},
+      contabilidad:{done:false,by:'',at:''},
+      tesoreria:{done:false,by:'',at:'',linkGeneradoEn:'',alerted2h:false,alertedExpired:false} };
+  }
+
+  const seedRows = [
+    {id:'r1', ciclo:'Ciclo 1 · Martes', fecha:'2026-07-07', osc:'OSC-1001', marca:'Cromantic', producto:'Detergente multiusos X', items:'3', registros:'2', tipo:'Nuevo registro', tarifa:'1027', costo:'1200000', unidad:'Cromantic', ruta:'INVIMÁGIL',
+      steps:{ regulatorio:{done:true,by:'Asuntos regulatorios',at:new Date(Date.now()-172800000).toISOString()}, gerencia:{done:false,by:'',at:''}, contabilidad:{done:false,by:'',at:''}, tesoreria:{done:false,by:'',at:'',linkGeneradoEn:'',alerted2h:false,alertedExpired:false} } },
+    {id:'r2', ciclo:'Ciclo 2 · Jueves', fecha:'2026-07-09', osc:'', marca:'Aruma', producto:'Jabón líquido Aruma Fresh', items:'1', registros:'NA', tipo:'Modificación registros', tarifa:'4001-23', costo:'3700000', unidad:'Aruma', ruta:'Oficina Virtual', steps: blankSteps() },
+    {id:'r3', ciclo:'Ciclo 1 · Martes', fecha:'2026-07-14', osc:'OSC-0872', marca:'Cromantic', producto:'Renovación línea Cromantic Pro', items:'5', registros:'GP', tipo:'Renovación', tarifa:'1029', costo:'2500000', unidad:'Cromantic', ruta:'Oficina Virtual',
+      steps:{ regulatorio:{done:true,by:'Asuntos regulatorios',at:new Date(Date.now()-260000000).toISOString()}, gerencia:{done:true,by:'Gerencia supply',at:new Date(Date.now()-180000000).toISOString()}, contabilidad:{done:true,by:'Contabilidad',at:new Date(Date.now()-90000000).toISOString()}, tesoreria:{done:true,by:'Tesorería',at:new Date().toISOString(),linkGeneradoEn:new Date(Date.now()-3600000).toISOString(),alerted2h:false,alertedExpired:false} } },
+    {id:'r4', ciclo:'Ciclo 2 · Jueves', fecha:'2026-07-16', osc:'', marca:'Aruma', producto:'Importador paralelo Aruma Home', items:'2', registros:'1', tipo:'Importador paralelo', tarifa:'130', costo:'900000', unidad:'Aruma', ruta:'INVIMÁGIL', steps: blankSteps() }
+  ];
+
+  let state = { rows: seedRows, notifs: [], alertLog: [], emails:{'Asuntos regulatorios':'','Gerencia supply':'','Contabilidad':'','Tesorería':''}, config:{webhookUrl:'', dashboardUrl:''} };
+  let rows = state.rows, notifs = state.notifs, alertLog = state.alertLog, emails = state.emails, config = state.config;
+
+  let dbRef = null, connected = false, firebaseOk = false;
+  let suppressNextWrite = false;
+
+  function opts(arr, current){
+    return arr.map(o=>{ const val = typeof o==='string'?o:o.v; const lab = typeof o==='string'?o:o.l;
+      return `<option value="${val}" ${val===current?'selected':''}>${lab}</option>`; }).join('');
+  }
+  function escapeHtml(s){ return (s||'').toString().replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+  function fmt(ts){ return ts ? new Date(ts).toLocaleString('es-CO') : ''; }
+  function parseCosto(v){ const n = parseFloat((v||'').toString().replace(/[^\d.-]/g,'')); return isNaN(n) ? 0 : n; }
+  function money(n){ return '$' + Math.round(n).toLocaleString('es-CO'); }
+  function oscLabel(row){ return row.osc && row.osc.trim() ? row.osc.trim() : '(sin OSC asignada)'; }
+  function computePaymentDate(row){
+    if(!row.fecha) return null;
+    const base = new Date(row.fecha+'T00:00:00');
+    const targetDow = row.ciclo === CICLOS[0] ? 2 : 4; // Martes=2, Jueves=4
+    const d = new Date(base);
+    while(d.getDay() !== targetDow){ d.setDate(d.getDate()+1); }
+    return d;
+  }
+  function paymentDateLabel(row){
+    const d = computePaymentDate(row);
+    if(!d) return 'Define la fecha de solicitud';
+    return d.toLocaleDateString('es-CO', {weekday:'long', day:'numeric', month:'long'});
+  }
+  function sameDate(a,b){ return a.getFullYear()===b.getFullYear() && a.getMonth()===b.getMonth() && a.getDate()===b.getDate(); }
+
+  // ===== SYNC STATUS =====
+  function setStatus(mode, sub){
+    const dot = document.getElementById('syncDot');
+    const label = document.getElementById('syncLabel');
+    dot.classList.remove('synced','offline');
+    if(mode==='green'){ dot.classList.add('synced'); label.textContent='Sincronizado'; }
+    else if(mode==='red'){ dot.classList.add('offline'); label.textContent='Sin conexión'; }
+    else { label.textContent='Conectando…'; }
+    document.getElementById('syncSub').textContent = sub || '';
+  }
+
+  // ===== FIREBASE (API REST + streaming nativo, SIN SDK externo) =====
+  const DATABASE_URL = firebaseConfig.databaseURL; // ej: https://tu-proyecto-default-rtdb.firebaseio.com
+  function restUrl(){ return `${DATABASE_URL}/${DB_PATH}.json`; }
+
+  function applyRemoteState(data){
+    if(!data) return;
+    rows = data.rows || seedRows;
+    notifs = data.notifs || [];
+    alertLog = data.alertLog || [];
+    emails = data.emails || {'Asuntos regulatorios':'','Gerencia supply':'','Contabilidad':'','Tesorería':''};
+    config = data.config || {webhookUrl:'', dashboardUrl:''};
+  }
+
+  function initFirebase(){
+    if(!DATABASE_URL || DATABASE_URL.indexOf('PASTE_AQUÍ')>-1){
+      setStatus('red', 'Firebase no configurado — usando copia local de este navegador.');
+      loadFromLocalStorage(); renderAll(); renderConfigInputs();
+      return;
+    }
+    firebaseOk = true;
+    setStatus('yellow', 'Conectando con Firebase…');
+    fetchInitial();
+
+    try{
+      const es = new EventSource(restUrl());
+      es.addEventListener('put', (e)=>{
+        try{
+          const parsed = JSON.parse(e.data);
+          if(parsed && parsed.path === '/' && parsed.data){ applyRemoteState(parsed.data); renderAll(); renderConfigInputs(); }
+          else { fetchInitial(); }
+        }catch(err){}
+        setStatus('green', 'Conectado a Firebase — cambios en vivo');
+      });
+      es.addEventListener('patch', ()=>{ fetchInitial(); });
+      es.onopen = ()=>{ setStatus('green', 'Conectado a Firebase — cambios en vivo'); };
+      es.onerror = ()=>{ setStatus('red', 'Sin conexión con Firebase — usando copia local.'); loadFromLocalStorage(); };
+    }catch(e){
+      setStatus('red', 'Este navegador no soporta streaming en vivo — se recargará cada 5s.'); 
+    }
+    setInterval(fetchInitial, 5000); // respaldo por si el streaming se corta
+  }
+
+  async function fetchInitial(){
+    try{
+      const res = await fetch(restUrl());
+      if(!res.ok) throw new Error('HTTP '+res.status);
+      const data = await res.json();
+      if(data){ applyRemoteState(data); }
+      else { saveData(); } // primera vez: sube el seed
+      renderAll(); renderConfigInputs();
+      setStatus('green', 'Conectado a Firebase — cambios en vivo');
+    }catch(e){
+      setStatus('red', 'Sin conexión con Firebase: ' + (e && e.message ? e.message : 'error desconocido'));
+      loadFromLocalStorage(); renderAll(); renderConfigInputs();
+    }
+  }
+
+  function saveData(){
+    const payload = { rows, notifs, alertLog, emails, config };
+    try{ localStorage.setItem(LOCAL_BACKUP_KEY, JSON.stringify(payload)); }catch(e){}
+    if(firebaseOk){
+      fetch(restUrl(), {method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload)})
+        .catch(()=>{ setStatus('red','No se pudo escribir en Firebase — revisa tu conexión.'); });
+    }
+  }
+
+  function loadFromLocalStorage(){
+    try{
+      const raw = localStorage.getItem(LOCAL_BACKUP_KEY);
+      if(raw){
+        const data = JSON.parse(raw);
+        rows = data.rows || seedRows; notifs = data.notifs || []; alertLog = data.alertLog || [];
+        emails = data.emails || emails; config = data.config || config;
+      }
+    }catch(e){}
+  }
+
+  function isBlocked(row, key){ const idx=STEP_ORDER.indexOf(key); if(idx===0) return false; return !row.steps[STEP_ORDER[idx-1]].done; }
+  function nextPendingKey(row){ for(const k of STEP_ORDER){ if(!row.steps[k].done) return k; } return null; }
+  function flowState(row){
+    const np = nextPendingKey(row);
+    if(!np) return {label:'Completado', cls:'ok'};
+    const idx = STEP_ORDER.indexOf(np);
+    if(idx>0 && !row.steps[STEP_ORDER[idx-1]].done) return {label:'Bloqueado en '+STEP_LABELS[np], cls:'blocked'};
+    return {label:'En curso · '+STEP_LABELS[np], cls:'pend'};
+  }
+
+  function notify(email, subject, body, text, isAlert){
+    if(!config.webhookUrl && email){
+      try{
+        const a = document.createElement('a');
+        a.href = `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+        a.style.display='none'; document.body.appendChild(a); a.click(); document.body.removeChild(a);
+      }catch(e){}
+    }
+    const entry = {id:'n'+Math.random().toString(36).slice(2,9), ts:Date.now(), text, email: email||''};
+    if(isAlert){ alertLog.push(entry); } else { notifs.push(entry); }
+    if(config.webhookUrl){
+      try{ fetch(config.webhookUrl, {method:'POST', mode:'no-cors', headers:{'Content-Type':'application/json'}, body: JSON.stringify({to:email, subject, body})}); }catch(e){}
+    }
+    saveData(); renderNotifs();
+  }
+  function linkLine(){ return config.dashboardUrl ? `\n\nIngresa aquí para continuar: ${config.dashboardUrl}` : ''; }
+
+  function genericStepCell(row, key){
+    const st = row.steps[key];
+    if(st.done){
+      return `<div class="step-cell"><span class="pill ok">✓ Hecho</span>
+        <div class="step-meta">${escapeHtml(st.by)}<br>${fmt(st.at)}</div>
+        <button class="btn-mini" style="margin-top:5px;" data-action="undo" data-step="${key}">Reabrir</button></div>`;
+    }
+    if(isBlocked(row,key)){
+      return `<div class="step-cell"><button class="btn-mini locked" data-action="blocked" data-step="${key}">🔒 Bloqueado</button>
+        <div class="step-meta">Esperando a ${STEP_LABELS[STEP_ORDER[STEP_ORDER.indexOf(key)-1]]}</div></div>`;
+    }
+    const extraNote = key==='regulatorio' ? `<div class="step-meta">Debes asignar el N° de OSC antes de marcar este paso.</div>` : '';
+    return `<div class="step-cell"><button class="btn-mini done" data-action="mark" data-step="${key}">✓ Marcar hecho</button>${extraNote}</div>`;
+  }
+  function tesoreriaCell(row){
+    const key='tesoreria'; const st = row.steps[key];
+    if(st.done){
+      const rutaTag = row.ruta==='Oficina Virtual' ? 'Pago vía Oficina Virtual' : 'Pago vía INVIMÁGIL';
+      return `<div class="step-cell"><span class="pill ok">✓ Pago ejecutado</span>
+        <div class="step-meta"><b>${rutaTag}</b><br>Ejecutado por: ${escapeHtml(st.by)}<br>Fecha y hora: ${fmt(st.at)}</div>
+        <button class="btn-mini" style="margin-top:5px;" data-action="undo" data-step="${key}">Reabrir</button></div>`;
+    }
+    if(isBlocked(row,key)){
+      return `<div class="step-cell"><button class="btn-mini locked" data-action="blocked" data-step="${key}">🔒 Bloqueado</button>
+        <div class="step-meta">Esperando a Contabilidad</div></div>`;
+    }
+    if(row.ruta === 'Oficina Virtual'){
+      if(!st.linkGeneradoEn){
+        return `<div class="step-cell"><button class="btn-mini linkbtn" data-action="genlink">Generar link 24h</button>
+          <div class="step-meta">Pago vía Oficina Virtual — aún no se ha enviado el link.</div></div>`;
+      }
+      const sentAt = new Date(st.linkGeneradoEn);
+      const expiresAt = new Date(sentAt.getTime() + LINK_MS);
+      const remain = LINK_MS - (Date.now() - sentAt.getTime());
+      let pillClass = 'pend', label;
+      if(remain <= 0){ pillClass='blocked'; label='Link 24h vencido'; }
+      else if(remain <= WARN_MS){ pillClass='warn'; label='Cuenta regresiva: '+formatRemaining(remain); }
+      else { label = 'Cuenta regresiva: '+formatRemaining(remain); }
+      return `<div class="step-cell"><span class="pill ${pillClass}">${label}</span>
+        <div class="step-meta"><b>Oficina Virtual</b><br>Enviado: ${fmt(sentAt)}<br>Vence: ${fmt(expiresAt)}</div>
+        <button class="btn-mini done" style="margin-top:5px;" data-action="mark" data-step="${key}">✓ Marcar link 24h completo</button></div>`;
+    }
+    return `<div class="step-cell"><span class="pill pend">Pendiente de pago</span>
+      <div class="step-meta"><b>INVIMÁGIL</b><br>Tesorería aún no ha ejecutado el pago.</div>
+      <button class="btn-mini done" style="margin-top:5px;" data-action="mark" data-step="${key}">✓ Marcar pago ejecutado</button></div>`;
+  }
+  function formatRemaining(ms){ if(ms<=0) return 'vencido'; const h=Math.floor(ms/3600000), m=Math.floor((ms%3600000)/60000); return `${h}h ${m}m`; }
+
+  function renderTable(){
+    const tbody = document.getElementById('dashBody');
+    tbody.innerHTML = rows.map(r => {
+      const fs = flowState(r);
+      return `<tr data-id="${r.id}">
+        <td><select data-field="ciclo">${opts(CICLOS, r.ciclo)}</select><div class="step-meta">Pago: ${paymentDateLabel(r)}</div></td>
+        <td><input type="date" data-field="fecha" value="${r.fecha||''}"></td>
+        <td><input type="text" class="narrow" data-field="osc" value="${escapeHtml(r.osc)}" placeholder="N° OSC"></td>
+        <td><input type="text" class="narrow" data-field="marca" value="${escapeHtml(r.marca)}"></td>
+        <td><input type="text" data-field="producto" value="${escapeHtml(r.producto)}" style="min-width:150px;"></td>
+        <td><input type="text" class="narrow" data-field="items" value="${escapeHtml(r.items)}"></td>
+        <td><input type="text" class="narrow" list="regOptions" data-field="registros" value="${escapeHtml(r.registros)}"></td>
+        <td><select data-field="tipo" style="min-width:140px;">${opts(TIPOS, r.tipo)}</select></td>
+        <td><select data-field="tarifa" style="min-width:150px;">${opts(TARIFAS, r.tarifa)}</select></td>
+        <td><input type="text" class="narrow" data-field="costo" value="${escapeHtml(r.costo)}" placeholder="0"></td>
+        <td><select data-field="unidad">${opts(UNIDADES, r.unidad)}</select></td>
+        <td><select data-field="ruta">${opts(RUTAS, r.ruta)}</select></td>
+        <td>${genericStepCell(r,'regulatorio')}</td>
+        <td>${genericStepCell(r,'gerencia')}</td>
+        <td>${genericStepCell(r,'contabilidad')}</td>
+        <td>${tesoreriaCell(r)}</td>
+        <td><span class="pill ${fs.cls}">${fs.label}</span></td>
+        <td><button class="icon-btn" title="Eliminar" data-action="del">✕</button></td>
+      </tr>`;
+    }).join('');
+
+    tbody.querySelectorAll('[data-field]').forEach(el=> el.addEventListener('change', onFieldChange));
+    tbody.querySelectorAll('[data-action="del"]').forEach(b=> b.addEventListener('click', onDelete));
+    tbody.querySelectorAll('[data-action="mark"]').forEach(b=> b.addEventListener('click', onMarkStep));
+    tbody.querySelectorAll('[data-action="undo"]').forEach(b=> b.addEventListener('click', onUndoStep));
+    tbody.querySelectorAll('[data-action="blocked"]').forEach(b=> b.addEventListener('click', onBlockedClick));
+    tbody.querySelectorAll('[data-action="genlink"]').forEach(b=> b.addEventListener('click', onGenLink));
+
+    updateStats(); checkLinkAlerts();
+  }
+
+  function renderNotifs(){
+    const list = document.getElementById('notifList');
+    if(!notifs.length){ list.innerHTML = '<li class="notif-empty">Aún no se han generado notificaciones.</li>'; }
+    else{
+      list.innerHTML = notifs.slice().reverse().slice(0,15).map(n => `
+        <li><span class="notif-dot"></span><div><div>${escapeHtml(n.text)}</div>
+        <div class="notif-time">${new Date(n.ts).toLocaleString('es-CO')} · ${escapeHtml(n.email||'sin correo configurado')}</div></div></li>`).join('');
+    }
+    document.getElementById('statNotif').textContent = notifs.length;
+  }
+
+  function renderAlerts(){
+    const blockedRows = rows.filter(r => flowState(r).cls==='blocked');
+    const expiring = rows.filter(r => r.ruta==='Oficina Virtual' && r.steps.tesoreria.linkGeneradoEn && !r.steps.tesoreria.done &&
+      (LINK_MS - (Date.now()-new Date(r.steps.tesoreria.linkGeneradoEn).getTime())) <= WARN_MS);
+    const total = blockedRows.length + expiring.length;
+    document.getElementById('alertCount').textContent = total;
+    document.getElementById('statBloq').textContent = blockedRows.length;
+    const list = document.getElementById('alertList');
+    if(!total){ list.innerHTML = '<li class="notif-empty">Sin alertas activas.</li>'; return; }
+    let html = '';
+    blockedRows.forEach(r=>{
+      const np = nextPendingKey(r); const waitingFor = STEP_LABELS[STEP_ORDER[STEP_ORDER.indexOf(np)-1]];
+      html += `<li><span class="alert-dot"></span><div><div><b>${escapeHtml(r.producto)}</b> (${escapeHtml(r.marca)}, OSC ${escapeHtml(oscLabel(r))}) — esperando a <b>${waitingFor}</b> para continuar con ${STEP_LABELS[np]}.</div></div>
+        <button class="btn-mini alertbtn alert-row-btn" data-rid="${r.id}" data-waiting="${waitingFor}">Escalar</button></li>`;
+    });
+    expiring.forEach(r=>{
+      const remain = LINK_MS - (Date.now()-new Date(r.steps.tesoreria.linkGeneradoEn).getTime());
+      const label = remain<=0 ? 'venció' : `vence en ${formatRemaining(remain)}`;
+      html += `<li><span class="alert-dot"></span><div><div><b>${escapeHtml(r.producto)}</b> (${escapeHtml(r.marca)}) — el link de Oficina Virtual ${label}.</div></div>
+        <button class="btn-mini alertbtn alert-row-btn" data-rid="${r.id}" data-waiting="Tesorería">Escalar</button></li>`;
+    });
+    list.innerHTML = html;
+    list.querySelectorAll('[data-rid]').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        const row = rows.find(r=>r.id===btn.getAttribute('data-rid'));
+        const waiting = btn.getAttribute('data-waiting'); const email = emails[waiting] || '';
+        notify(email, `Alerta: trámite detenido — ${row.producto}`,
+          `El trámite "${row.producto}" (${row.marca}, OSC ${oscLabel(row)}) necesita la atención de ${waiting} para continuar (ciclo ${row.ciclo}).${linkLine()}`,
+          `Alerta escalada: "${row.producto}" requiere atención de ${waiting}.`, true);
+      });
+    });
+  }
+
+  function onFieldChange(e){
+    const tr = e.target.closest('tr'); const row = rows.find(r=>r.id===tr.getAttribute('data-id')); if(!row) return;
+    row[e.target.getAttribute('data-field')] = e.target.value;
+    renderAll(); saveData();
+  }
+  function onDelete(e){
+    const tr = e.target.closest('tr'); rows = rows.filter(r=>r.id!==tr.getAttribute('data-id'));
+    renderAll(); saveData();
+  }
+  function onBlockedClick(e){
+    const tr = e.target.closest('tr'); const row = rows.find(r=>r.id===tr.getAttribute('data-id'));
+    const key = e.target.getAttribute('data-step'); const idx = STEP_ORDER.indexOf(key); const prevLabel = STEP_LABELS[STEP_ORDER[idx-1]];
+    alert(`No se puede completar "${STEP_LABELS[key]}" porque "${prevLabel}" aún no ha tramitado su paso en este trámite.`);
+    const email = emails[prevLabel] || '';
+    notify(email, `Alerta: trámite detenido — ${row.producto}`,
+      `Se intentó avanzar "${STEP_LABELS[key]}" en el trámite "${row.producto}" (${row.marca}, OSC ${oscLabel(row)}) pero está bloqueado porque ${prevLabel} no ha completado su paso.${linkLine()}`,
+      `Intento bloqueado: "${row.producto}" no puede avanzar a ${STEP_LABELS[key]} sin que ${prevLabel} tramite primero.`, true);
+  }
+  function onGenLink(e){
+    const tr = e.target.closest('tr'); const row = rows.find(r=>r.id===tr.getAttribute('data-id'));
+    row.steps.tesoreria.linkGeneradoEn = new Date().toISOString();
+    row.steps.tesoreria.alerted2h = false; row.steps.tesoreria.alertedExpired = false;
+    renderAll(); saveData();
+  }
+  function onMarkStep(e){
+    const tr = e.target.closest('tr'); const row = rows.find(r=>r.id===tr.getAttribute('data-id')); const key = e.target.getAttribute('data-step');
+    if(isBlocked(row,key)){ onBlockedClick(e); return; }
+    if(key==='regulatorio' && !(row.osc||'').trim()){ alert('Debes asignar el número de OSC antes de marcar este paso.'); return; }
+    if(key==='tesoreria' && row.ruta==='Oficina Virtual' && !row.steps.tesoreria.linkGeneradoEn){ alert('Debes generar el link de 24 horas antes de marcarlo como completo.'); return; }
+    row.steps[key].done = true; row.steps[key].by = STEP_LABELS[key]; row.steps[key].at = new Date().toISOString();
+    renderAll(); saveData();
+
+    const idx = STEP_ORDER.indexOf(key); const nextKey = STEP_ORDER[idx+1]; const osc = oscLabel(row);
+    let subject, body, text;
+    if(key==='regulatorio'){
+      subject = `OSC ${osc}: pendiente de aprobación — Gerencia supply`;
+      body = `Asuntos regulatorios ha realizado la programación del ciclo de radicación. La OSC ${osc} del trámite "${row.producto}" (${row.marca}) está pendiente de su aprobación.${linkLine()}`;
+      text = `Asuntos regulatorios programó la OSC ${osc} — pendiente de aprobación de Gerencia supply.`;
+    } else if(key==='gerencia'){
+      subject = `OSC ${osc}: pendiente de contabilización — Contabilidad`;
+      body = `Gerencia supply ha realizado su aprobación de la OSC ${osc} del trámite "${row.producto}" (${row.marca}). Está pendiente su contabilización.${linkLine()}`;
+      text = `Gerencia supply aprobó la OSC ${osc} — pendiente de contabilización.`;
+    } else if(key==='contabilidad'){
+      subject = `OSC ${osc}: pendiente de pago (${row.ruta}) — Tesorería`;
+      body = `Contabilidad ha contabilizado la OSC ${osc} del trámite "${row.producto}" (${row.marca}). Está pendiente la ejecución del pago por ruta ${row.ruta}.${linkLine()}`;
+      text = `Contabilidad contabilizó la OSC ${osc} — pendiente de pago en Tesorería (${row.ruta}).`;
+    } else {
+      const fechaHora = new Date(row.steps.tesoreria.at).toLocaleString('es-CO');
+      subject = `OSC ${osc}: trámite completado`;
+      body = `El trámite "${row.producto}" (${row.marca}, OSC ${osc}) completó todo el flujo: Regulatorio → Gerencia supply → Contabilidad → Tesorería.\nPago ejecutado el ${fechaHora} por ruta ${row.ruta}.${linkLine()}`;
+      text = `Tesorería ejecutó el pago de la OSC ${osc} el ${fechaHora}. Trámite completado.`;
+    }
+    const email = nextKey ? (emails[STEP_LABELS[nextKey]]||'') : (emails[STEP_LABELS[key]]||'');
+    notify(email, subject, body, text, false);
+    if(key==='tesoreria'){
+      const fechaHora = new Date(row.steps.tesoreria.at).toLocaleString('es-CO');
+      notify(emails['Contabilidad']||'', `Confirmación de pago — OSC ${osc}`,
+        `Tesorería ejecutó el pago del trámite "${row.producto}" (${row.marca}, OSC ${osc}) el ${fechaHora}, por ruta ${row.ruta}. Puedes dar por cerrado este ciclo para efectos contables.${linkLine()}`,
+        `Confirmación a Contabilidad: pago de OSC ${osc} ejecutado el ${fechaHora}.`, false);
+    }
+  }
+  function onUndoStep(e){
+    const tr = e.target.closest('tr'); const row = rows.find(r=>r.id===tr.getAttribute('data-id')); const key = e.target.getAttribute('data-step');
+    const idx = STEP_ORDER.indexOf(key);
+    for(let i=idx;i<STEP_ORDER.length;i++){
+      const k = STEP_ORDER[i]; row.steps[k].done=false; row.steps[k].by=''; row.steps[k].at='';
+      if(k==='tesoreria'){ row.steps[k].linkGeneradoEn=''; row.steps[k].alerted2h=false; row.steps[k].alertedExpired=false; }
+    }
+    renderAll(); saveData();
+  }
+
+  function checkLinkAlerts(){
+    let changed = false;
+    rows.forEach(row=>{
+      if(row.steps.tesoreria.done) return;
+      if(row.ruta==='Oficina Virtual' && row.steps.tesoreria.linkGeneradoEn){
+        const remain = LINK_MS - (Date.now() - new Date(row.steps.tesoreria.linkGeneradoEn).getTime());
+        if(remain<=0 && !row.steps.tesoreria.alertedExpired){
+          row.steps.tesoreria.alertedExpired = true; changed = true;
+          notify(emails['Tesorería']||'', `Link 24h vencido — ${row.producto}`,
+            `El link de pago (Oficina Virtual) del trámite "${row.producto}" (${row.marca}, OSC ${oscLabel(row)}) ya venció. Debes generar uno nuevo para continuar.${linkLine()}`,
+            `Link 24h vencido en "${row.producto}".`, true);
+        } else if(remain>0 && remain<=WARN_MS && !row.steps.tesoreria.alerted2h){
+          row.steps.tesoreria.alerted2h = true; changed = true;
+          notify(emails['Tesorería']||'', `Link por vencer — ${row.producto}`,
+            `El link de pago (Oficina Virtual) del trámite "${row.producto}" (${row.marca}, OSC ${oscLabel(row)}) vence en menos de 2 horas.${linkLine()}`,
+            `Link por vencer en "${row.producto}" (menos de 2h).`, true);
+        }
+      } else if(row.ruta==='INVIMÁGIL' && row.steps.contabilidad.done && !isBlocked(row,'tesoreria')){
+        const elapsed = Date.now() - new Date(row.steps.contabilidad.at).getTime();
+        if(elapsed > LINK_MS && !row.steps.tesoreria.alertedInvimagilDelay){
+          row.steps.tesoreria.alertedInvimagilDelay = true; changed = true;
+          notify(emails['Tesorería']||'', `Pago pendiente hace más de 24h — ${row.producto}`,
+            `El trámite "${row.producto}" (${row.marca}, OSC ${oscLabel(row)}) fue contabilizado hace más de 24 horas y el pago por INVIMÁGIL sigue pendiente de ejecución.${linkLine()}`,
+            `Pago INVIMÁGIL pendiente hace más de 24h en "${row.producto}".`, true);
+        }
+      }
+    });
+    if(changed){ saveData(); }
+    renderAlerts();
+  }
+
+  function updateStats(){
+    document.getElementById('statTotal').textContent = rows.length;
+    document.getElementById('statOk').textContent = rows.filter(r=>nextPendingKey(r)===null).length;
+    document.getElementById('statPend').textContent = rows.filter(r=>nextPendingKey(r)!==null).length;
+    const totalCosto = rows.reduce((sum,r)=> sum + parseCosto(r.costo), 0);
+    document.getElementById('statCostoTotal').textContent = money(totalCosto);
+    const now = new Date(); const curKey = now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0');
+    const costoMes = rows.filter(r=> (r.fecha||'').slice(0,7)===curKey).reduce((s,r)=> s+parseCosto(r.costo),0);
+    document.getElementById('statCostoMes').textContent = money(costoMes);
+    renderMonthList(); renderUnitList();
+  }
+
+  const MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+  function renderMonthList(){
+    const byMonth = {};
+    rows.forEach(r=>{ const key=(r.fecha||'').slice(0,7); if(!key) return; byMonth[key]=(byMonth[key]||0)+parseCosto(r.costo); });
+    const keys = Object.keys(byMonth).sort(); const list = document.getElementById('monthList');
+    if(!keys.length){ list.innerHTML = '<li class="notif-empty">Sin datos de costo aún.</li>'; return; }
+    list.innerHTML = keys.map(k=>{ const [y,m]=k.split('-'); return `<li><b>${MESES[parseInt(m,10)-1]} ${y}</b><span class="amt">${money(byMonth[k])}</span></li>`; }).join('');
+  }
+  function renderUnitList(){
+    const byUnit = {}; rows.forEach(r=>{ byUnit[r.unidad]=(byUnit[r.unidad]||0)+parseCosto(r.costo); });
+    const keys = Object.keys(byUnit); const list = document.getElementById('unitList');
+    if(!keys.length){ list.innerHTML = '<li class="notif-empty">Sin datos de costo aún.</li>'; return; }
+    list.innerHTML = keys.map(k => `<li><b>${escapeHtml(k)}</b><span class="amt">${money(byUnit[k])}</span></li>`).join('');
+  }
+
+  function renderMonthCalendar(){
+    const now = new Date();
+    const year = now.getFullYear(), month = now.getMonth();
+    const firstDay = new Date(year, month, 1);
+    const lastDay = new Date(year, month+1, 0);
+    // arrancar en el lunes de la semana que contiene el día 1
+    let cursor = new Date(firstDay);
+    const dowMon0 = (cursor.getDay()+6)%7; // 0=lunes
+    cursor.setDate(cursor.getDate()-dowMon0);
+
+    const cellFor = (date)=>{
+      if(date.getMonth()!==month) return `<span class="foot-note">—</span>`;
+      const programadas = rows.filter(r=>{ const pd=computePaymentDate(r); return pd && sameDate(pd,date); });
+      const realizadas = programadas.filter(r=>r.steps.tesoreria.done).length;
+      const isToday = sameDate(date, now);
+      return `<div>
+        <div style="font-weight:700; color:var(--m-950); font-size:12px;">${date.getDate()} ${MESES[month].slice(0,3)}${isToday? ' · <span style=\"color:var(--accent);\">hoy</span>':''}</div>
+        <div class="step-meta">Radicaciones programadas: <b>${programadas.length}</b><br>Radicaciones realizadas: <b>${realizadas}</b></div>
+      </div>`;
+    };
+
+    let html = '';
+    let weekNum = 1;
+    while(cursor <= lastDay){
+      const tuesday = new Date(cursor); tuesday.setDate(cursor.getDate()+1);
+      const thursday = new Date(cursor); thursday.setDate(cursor.getDate()+3);
+      const weekLabel = `Semana del ${cursor.getDate()} al ${new Date(cursor.getFullYear(),cursor.getMonth(),cursor.getDate()+6).getDate()}`;
+      html += `<tr><td style="font-weight:600;">${weekLabel}</td><td>${cellFor(tuesday)}</td><td>${cellFor(thursday)}</td></tr>`;
+      cursor.setDate(cursor.getDate()+7);
+      weekNum++;
+      if(weekNum>7) break;
+    }
+    document.getElementById('calendarBody').innerHTML = html;
+  }
+
+  function renderAll(){ renderTable(); renderAlerts(); renderNotifs(); renderMonthCalendar(); }
+
+  // ===== MODAL =====
+  function fillModalSelects(){
+    document.getElementById('f-ciclo').innerHTML = opts(CICLOS, CICLOS[0]);
+    document.getElementById('f-tipo').innerHTML = opts(TIPOS, TIPOS[0]);
+    document.getElementById('f-tarifa').innerHTML = opts(TARIFAS, TARIFAS[0].v);
+    document.getElementById('f-unidad').innerHTML = opts(UNIDADES, UNIDADES[0]);
+    document.getElementById('f-ruta').innerHTML = opts(RUTAS, RUTAS[0]);
+  }
+  function openModal(){ document.getElementById('modalOverlay').classList.add('open'); }
+  function closeModal(){ document.getElementById('modalOverlay').classList.remove('open'); }
+  document.getElementById('btnAdd').addEventListener('click', ()=>{ fillModalSelects(); openModal(); });
+  document.getElementById('modalClose').addEventListener('click', closeModal);
+  document.getElementById('btnCancelModal').addEventListener('click', closeModal);
+  document.getElementById('modalOverlay').addEventListener('click', (e)=>{ if(e.target.id==='modalOverlay') closeModal(); });
+  document.getElementById('btnSaveModal').addEventListener('click', ()=>{
+    const id = 'r' + Math.random().toString(36).slice(2,9);
+    rows.push({
+      id, ciclo:document.getElementById('f-ciclo').value, fecha:document.getElementById('f-fecha').value,
+      osc:document.getElementById('f-osc').value.trim(), marca:document.getElementById('f-marca').value,
+      producto:document.getElementById('f-producto').value || 'Nuevo trámite', items:document.getElementById('f-items').value,
+      registros:document.getElementById('f-registros').value, tipo:document.getElementById('f-tipo').value,
+      tarifa:document.getElementById('f-tarifa').value, costo:document.getElementById('f-costo').value,
+      unidad:document.getElementById('f-unidad').value, ruta:document.getElementById('f-ruta').value,
+      steps: blankSteps()
+    });
+    renderAll(); saveData(); closeModal();
+    ['f-fecha','f-osc','f-marca','f-producto','f-items','f-registros','f-costo'].forEach(id=> document.getElementById(id).value='');
+  });
+
+  // ===== TABS =====
+  document.querySelectorAll('.nav-tab').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      document.querySelectorAll('.nav-tab').forEach(b=>b.classList.remove('active'));
+      document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById('tab-'+btn.getAttribute('data-tab')).classList.add('active');
+    });
+  });
+
+  // ===== EMAILS / CONFIG =====
+  document.getElementById('btnSaveEmails').addEventListener('click', ()=>{
+    Object.values(STEP_LABELS).forEach(roleLabel=>{
+      const input = document.getElementById('email-'+roleLabel);
+      if(input) emails[roleLabel] = input.value.trim();
+    });
+    saveData();
+  });
+  document.getElementById('btnSaveWebhook').addEventListener('click', ()=>{
+    config.webhookUrl = document.getElementById('webhookUrl').value.trim();
+    config.dashboardUrl = document.getElementById('dashboardUrl').value.trim();
+    saveData();
+  });
+  function renderConfigInputs(){
+    Object.values(STEP_LABELS).forEach(roleLabel=>{
+      const input = document.getElementById('email-'+roleLabel);
+      if(input) input.value = emails[roleLabel] || '';
+    });
+    document.getElementById('webhookUrl').value = config.webhookUrl || '';
+    document.getElementById('dashboardUrl').value = config.dashboardUrl || '';
+  }
+
+  // ===== INIT =====
+  fillModalSelects();
+  initFirebase();
+  setInterval(()=>{ checkLinkAlerts(); }, 5000);
+})();
+</script>
+</body>
+</html>
