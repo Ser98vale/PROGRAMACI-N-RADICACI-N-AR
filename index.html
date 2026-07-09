@@ -918,10 +918,12 @@
   function renderConfigInputs(){
     Object.values(STEP_LABELS).forEach(roleLabel=>{
       const input = document.getElementById('email-'+roleLabel);
-      if(input) input.value = emails[roleLabel] || '';
+      if(input && document.activeElement !== input) input.value = emails[roleLabel] || '';
     });
-    document.getElementById('webhookUrl').value = config.webhookUrl || '';
-    document.getElementById('dashboardUrl').value = config.dashboardUrl || '';
+    const webhookInput = document.getElementById('webhookUrl');
+    const dashboardInput = document.getElementById('dashboardUrl');
+    if(document.activeElement !== webhookInput) webhookInput.value = config.webhookUrl || '';
+    if(document.activeElement !== dashboardInput) dashboardInput.value = config.dashboardUrl || '';
   }
 
   // ===== INIT =====
